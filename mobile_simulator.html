@@ -270,6 +270,11 @@
                     document.getElementById('locationBox').style.background = '#fef08a';
                     document.getElementById('locationBox').style.color = '#854d0e';
                     document.getElementById('submitBtn').disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 }
             );
         }
