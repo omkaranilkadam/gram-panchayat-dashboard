@@ -55,6 +55,9 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-body);
     cursor: pointer;
     transition: all 0.2s ease;
+    border: none;
+    font-size: 0.875rem;
+}
 .btn-primary {
     background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
     color: white;
