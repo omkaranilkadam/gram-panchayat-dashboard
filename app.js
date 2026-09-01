@@ -1,5 +1,6 @@
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_URL = isLocal ? 'http://localhost:8080/api/v1' : 'https://gram-panchayat-api-wd18.onrender.com/api/v1';
+const BASE_URL = isLocal ? 'http://localhost:8080' : 'https://gram-panchayat-api-wd18.onrender.com';
+const API_URL = `${BASE_URL}/api/v1`;
 const formatDate = (dateString) => {
     const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString('en-IN', options);
@@ -99,7 +100,7 @@ const renderComplaintsList = (data) => {
     }
     data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(complaint => {
         const statusInfo = getStatusDetails(complaint.status);
-        const imgUrl = complaint.media_urls ? `http://localhost:8080${complaint.media_urls}` : 'assets/pothole.jpg';
+        const imgUrl = complaint.media_urls ? `${BASE_URL}${complaint.media_urls}` : 'assets/pothole.jpg';
         const html = `
             <img src="${imgUrl}" alt="Complaint" class="complaint-thumbnail" onerror="this.src='assets/pothole.jpg'">
             <div class="complaint-info">
@@ -173,7 +174,7 @@ window.openComplaintModal = (id) => {
     const complaint = complaintsData.find(c => c.id == id); 
     if (!complaint) return;
     const statusInfo = getStatusDetails(complaint.status);
-    const imgUrl = complaint.media_urls ? `http://localhost:8080${complaint.media_urls}` : 'assets/pothole.jpg';
+    const imgUrl = complaint.media_urls ? `${BASE_URL}${complaint.media_urls}` : 'assets/pothole.jpg';
     document.getElementById('modalBody').innerHTML = `
         <div class="modal-media">
             <img src="${imgUrl}" alt="Complaint Evidence" onerror="this.src='assets/pothole.jpg'">
