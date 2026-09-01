@@ -1,0 +1,22 @@
+# Virtual environments
+backend/venv/
+backend/.venv*/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Database and uploads
+backend/gram_panchayat.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db

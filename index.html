@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gram Panchayat | Smart Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="view-login" class="login-container active-view">
+        <div class="login-card glass-card">
+            <div class="login-header">
+                <div class="logo">
+                    <i class="ph-fill ph-buildings"></i>
+                </div>
+                <h2>Gram Panchayat</h2>
+                <p>Admin Dashboard Login</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" class="modern-input" placeholder="Enter admin username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="modern-input" placeholder="Enter password" required>
+                </div>
+                <div id="loginError" class="login-error"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 1rem;">Login</button>
+            </form>
+            <div class="login-footer">
+                <small>Hint: use any username and password</small>
+            </div>
+        </div>
+    </div>
+    <div class="app-container hidden-app" id="appContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="ph-fill ph-buildings"></i>
+                </div>
+                <h2>Gram Panchayat</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item active" onclick="switchView('dashboard')" id="nav-dashboard">
+                    <i class="ph ph-squares-four"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" onclick="switchView('map')" id="nav-map">
+                    <i class="ph ph-map-pin"></i>
+                    <span>Live Map</span>
+                </a>
+                <a class="nav-item" onclick="switchView('complaints')" id="nav-complaints">
+                    <i class="ph ph-warning-circle"></i>
+                    <span>Complaints</span>
+                    <span class="badge new-badge" id="newComplaintsBadge">3 New</span>
+                </a>
+                <a class="nav-item" onclick="switchView('settings')" id="nav-settings">
+                    <i class="ph ph-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <img src="https://i.pravatar.cc/150?img=33" alt="Admin">
+                    </div>
+                    <div class="user-info">
+                        <h4>Sarpanch Admin</h4>
+                        <p>Administrator</p>
+                    </div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
+                    <i class="ph ph-sign-out"></i> Logout
+                </button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-search">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Search complaints, locations...">
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn action-btn" onclick="toggleNotifications()">
+                        <i class="ph ph-bell"></i>
+                        <span class="notification-dot" id="notificationDot"></span>
+                    </button>
+                    <div class="notifications-dropdown glass-card" id="notificationsDropdown">
+                        <h4>Notifications</h4>
+                        <div id="notificationsList">
+                            <div class="notification-item">
+                                <i class="ph ph-warning-circle text-warning"></i>
+                                <div>
+                                    <p>New complaint reported in Ward 4.</p>
+                                    <small>Just now</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div id="view-dashboard" class="view-section active-view">
+                <div class="dashboard-grid">
+                    <div class="stats-container">
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon warning">
+                                <i class="ph ph-file-text"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Total Complaints</h3>
+                                <div class="stat-value" id="stat-total">0</div>
+                                <div class="stat-trend positive">
+                                    <i class="ph ph-trend-up"></i> Active tracking
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon danger">
+                                <i class="ph ph-hourglass-high"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Pending Actions</h3>
+                                <div class="stat-value" id="stat-pending">0</div>
+                                <div class="stat-trend negative">
+                                    <i class="ph ph-warning-circle"></i> Requires attention
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon success">
+                                <i class="ph ph-check-circle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Resolved</h3>
+                                <div class="stat-value" id="stat-resolved">0</div>
+                                <div class="stat-trend positive">
+                                    <i class="ph ph-trend-up"></i> Great job
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon info">
+                                <i class="ph ph-wrench"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>In Progress</h3>
+                                <div class="stat-value" id="stat-inprogress">0</div>
+                                <div class="stat-trend info">
+                                    <i class="ph ph-arrows-clockwise"></i> Currently working
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-row">
+                        <div class="map-section glass-card">
+                            <div class="section-header">
+                                <h3><i class="ph ph-map-trifold"></i> Live Geotag Map</h3>
+                                <div class="map-filters">
+                                    <select class="modern-select" id="mapFilter">
+                                        <option value="all">All Status</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="resolved">Resolved</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="map" class="map-container"></div>
+                        </div>
+                        <div class="feed-section glass-card">
+                            <div class="section-header">
+                                <h3><i class="ph ph-list-dashes"></i> Recent Complaints</h3>
+                                <button class="btn btn-outline btn-sm" onclick="switchView('complaints')">View All</button>
+                            </div>
+                            <div class="complaints-list" id="complaintsList">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="view-map" class="view-section">
+                <div class="full-map-container glass-card">
+                    <div class="section-header">
+                        <h3><i class="ph ph-map-trifold"></i> Expanded Live Geotag Map</h3>
+                    </div>
+                    <div id="full-map" class="map-container"></div>
+                </div>
+            </div>
+            <div id="view-complaints" class="view-section">
+                <div class="glass-card page-card">
+                    <div class="section-header">
+                        <h3><i class="ph ph-list-dashes"></i> All Complaints</h3>
+                    </div>
+                    <div class="complaints-list full-list" id="fullComplaintsList">
+                    </div>
+                </div>
+            </div>
+            <div id="view-settings" class="view-section">
+                <div class="glass-card page-card">
+                    <div class="section-header">
+                        <h3><i class="ph ph-gear"></i> System Settings</h3>
+                    </div>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label>Panchayat Name</label>
+                            <input type="text" class="modern-input" value="Gram Panchayat" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Admin Name</label>
+                            <input type="text" class="modern-input" value="Sarpanch Admin">
+                        </div>
+                        <div class="form-group">
+                            <label>Notification Alerts</label>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <button class="btn btn-primary mt-4" onclick="alert('Settings saved successfully!')">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div class="modal-backdrop" id="complaintModal">
+        <div class="modal-content glass-card">
+            <button class="close-btn" id="closeModalBtn"><i class="ph ph-x"></i></button>
+            <div class="modal-body" id="modalBody">
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="app.js"></script>
+</body>
+</html>
