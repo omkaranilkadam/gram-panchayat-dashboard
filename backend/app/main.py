@@ -9,7 +9,7 @@ origins = [
     "http://localhost:5173",
     "http://localhost:8000",
     "https://dashboard.grampanchayat.gov.in",
-    "https://your-github-username.github.io",
+    "https://omkaranilkadam.github.io",
 ]
 app.add_middleware(
     CORSMiddleware,

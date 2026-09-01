@@ -1,5 +1,5 @@
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_URL = isLocal ? 'http://localhost:8080/api/v1' : 'https://your-backend-app.onrender.com/api/v1';
+const API_URL = isLocal ? 'http://localhost:8080/api/v1' : 'https://gram-panchayat-api-wd18.onrender.com/api/v1';
 const formatDate = (dateString) => {
     const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString('en-IN', options);
