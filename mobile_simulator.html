@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gram Panchayat - Mobile App Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: #111;
+            border-radius: 50px;
+            padding: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .notch {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #111;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            z-index: 10;
+        }
+
+        .screen {
+            background: #ffffff;
+            width: 100%;
+            height: 100%;
+            border-radius: 38px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 40px 20px 20px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.25rem; font-weight: 600; }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; color: #334155; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .location-box {
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #0369a1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            transform: translateY(100px);
+            transition: transform 0.3s;
+        }
+        .toast.show { transform: translateY(0); }
+        .toast.error { background: #ef4444; }
+
+        /* Screens */
+        #loginScreen, #reportScreen { display: none; }
+        .active-screen { display: block !important; }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+    <div class="notch"></div>
+    <div class="screen">
+        <div class="header">
+            <h1>Citizen Report App</h1>
+        </div>
+
+        <!-- Login Screen -->
+        <div class="content active-screen" id="loginScreen">
+            <h2 style="margin-bottom: 20px; color: #1e293b; font-size: 1.5rem;">Welcome</h2>
+            <p style="color: #64748b; margin-bottom: 30px; font-size: 0.95rem;">Login to submit civic issues directly to the Gram Panchayat.</p>
+            
+            <form id="simLoginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="simUsername" value="admin@grampanchayat.in" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="simPassword" value="admin123" required>
+                </div>
+                <button type="submit" class="btn" id="loginBtn">Login to App</button>
+            </form>
+        </div>
+
+        <!-- Report Screen -->
+        <div class="content" id="reportScreen">
+            <div class="location-box" id="locationBox">
+                <i class="ph ph-spinner ph-spin" style="font-size: 1.2rem;"></i>
+                Getting your GPS location...
+            </div>
+
+            <form id="reportForm" onsubmit="submitReport(event)">
+                <div class="form-group">
+                    <label>Issue Title</label>
+                    <input type="text" id="issueTitle" placeholder="e.g. Broken water pipe" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="issueCategory" required>
+                        <option value="water">Water Supply</option>
+                        <option value="electricity">Electricity</option>
+                        <option value="road">Roads & Infrastructure</option>
+                        <option value="sanitation">Sanitation</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="issuePriority" required>
+                        <option value="high">High (Urgent)</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="issueDesc" rows="4" placeholder="Describe the issue in detail..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn" disabled>
+                    <i class="ph ph-paper-plane-tilt"></i> Submit Report
+                </button>
+            </form>
+        </div>
+        
+        <div class="toast" id="toastMessage">Report Submitted!</div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://gram-panchayat-api-wd18.onrender.com/api/v1';
+    let currentLat = null;
+    let currentLng = null;
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('loginBtn');
+        btn.innerText = 'Authenticating...';
+        btn.disabled = true;
+
+        const formData = new URLSearchParams();
+        formData.append('username', document.getElementById('simUsername').value);
+        formData.append('password', document.getElementById('simPassword').value);
+
+        try {
+            const res = await fetch(`${API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            });
+            if(!res.ok) throw new Error("Login failed");
+            const data = await res.json();
+            localStorage.setItem('sim_token', data.access_token);
+            
+            document.getElementById('loginScreen').classList.remove('active-screen');
+            document.getElementById('reportScreen').classList.add('active-screen');
+            getLocation();
+        } catch(err) {
+            alert(err.message);
+            btn.innerText = 'Login to App';
+            btn.disabled = false;
+        }
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentLat = position.coords.latitude;
+                    currentLng = position.coords.longitude;
+                    document.getElementById('locationBox').innerHTML = `<i class="ph-fill ph-map-pin"></i> Location acquired: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+                    document.getElementById('locationBox').style.background = '#dcfce7';
+                    document.getElementById('locationBox').style.borderColor = '#86efac';
+                    document.getElementById('locationBox').style.color = '#166534';
+                    document.getElementById('submitBtn').disabled = false;
+                },
+                (error) => {
+                    currentLat = 21.1458; 
+                    currentLng = 79.0882;
+                    document.getElementById('locationBox').innerHTML = `<i class="ph-fill ph-warning-circle"></i> Location denied. Using demo coordinates.`;
+                    document.getElementById('locationBox').style.background = '#fef08a';
+                    document.getElementById('locationBox').style.color = '#854d0e';
+                    document.getElementById('submitBtn').disabled = false;
+                }
+            );
+        }
+    }
+
+    async function submitReport(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const token = localStorage.getItem('sim_token');
+        
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Sending...';
+        btn.disabled = true;
+
+        const payload = {
+            title: document.getElementById('issueTitle').value,
+            description: document.getElementById('issueDesc').value,
+            category: document.getElementById('issueCategory').value,
+            priority: document.getElementById('issuePriority').value,
+            latitude: currentLat + (Math.random() * 0.02 - 0.01), 
+            longitude: currentLng + (Math.random() * 0.02 - 0.01)
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/complaints/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if(!res.ok) throw new Error("Failed to submit");
+            
+            showToast("Report submitted successfully!", false);
+            document.getElementById('reportForm').reset();
+            
+        } catch(err) {
+            showToast("Error submitting report", true);
+        } finally {
+            btn.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Submit Report';
+            btn.disabled = false;
+        }
+    }
+
+    function showToast(msg, isError) {
+        const t = document.getElementById('toastMessage');
+        t.innerText = msg;
+        if(isError) t.classList.add('error');
+        else t.classList.remove('error');
+        
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+</script>
+</body>
+</html>
