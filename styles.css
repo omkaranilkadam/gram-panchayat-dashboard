@@ -739,7 +739,7 @@ input:checked + .slider:before {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: -2;
-    background: black;
+    background: url('assets/gov-login-bg.jpg') center/cover no-repeat;
 }
 .bg-slider .slide {
     position: absolute;
