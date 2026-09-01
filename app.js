@@ -46,23 +46,46 @@ const updateStats = (data) => {
         notifDot.style.display = 'none';
     }
 };
+let lastComplaintId = null;
+
 const renderMarkers = (data) => {
     if (!map || !fullMap) return;
     Object.values(markers).forEach(m => map.removeLayer(m));
     Object.values(fullMarkers).forEach(m => fullMap.removeLayer(m));
     markers = {};
     fullMarkers = {};
+    
+    const latLngs = [];
     data.forEach(complaint => {
         const statusClass = complaint.status === 'resolved' ? 'resolved' : '';
         const customIcon = L.divIcon({ className: `custom-marker ${statusClass}`, iconSize: [16, 16], iconAnchor: [8, 8] });
         const popupContent = `<b>${complaint.title}</b><br><a href="#" onclick="openComplaintModal('${complaint.id}'); return false;">View Details</a>`;
+        
         const m1 = L.marker([complaint.latitude, complaint.longitude], { icon: customIcon }).addTo(map);
         m1.bindPopup(popupContent);
         markers[complaint.id] = m1;
+        
         const m2 = L.marker([complaint.latitude, complaint.longitude], { icon: customIcon }).addTo(fullMap);
         m2.bindPopup(popupContent);
         fullMarkers[complaint.id] = m2;
+        
+        latLngs.push([complaint.latitude, complaint.longitude]);
     });
+
+    if (data.length > 0) {
+        // Find the newest complaint by ID
+        const newestComplaint = data.reduce((max, c) => c.id > max.id ? c : max, data[0]);
+        
+        if (lastComplaintId === null) {
+            // First load: fit bounds to show all markers
+            const bounds = L.latLngBounds(latLngs);
+            map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+        } else if (newestComplaint.id > lastComplaintId) {
+            // New complaint arrived via polling! Fly map to the new location
+            map.flyTo([newestComplaint.latitude, newestComplaint.longitude], 15, { animate: true, duration: 1.5 });
+        }
+        lastComplaintId = newestComplaint.id;
+    }
 };
 const renderComplaintsList = (data) => {
     const listContainer = document.getElementById('complaintsList');
