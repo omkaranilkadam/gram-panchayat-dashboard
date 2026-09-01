@@ -255,6 +255,12 @@ window.handleLogin = async (e) => {
     const user = document.getElementById('username').value;
     const pass = document.getElementById('password').value;
     const err = document.getElementById('loginError');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const originalBtnText = submitBtn.innerText;
+    submitBtn.innerText = 'Authenticating... (Waking up Server)';
+    submitBtn.disabled = true;
+    
     try {
         const formData = new URLSearchParams();
         formData.append('username', user);
@@ -272,15 +278,23 @@ window.handleLogin = async (e) => {
         const data = await response.json();
         localStorage.setItem('token', data.access_token);
         err.innerText = '';
+        
+        submitBtn.innerText = 'Loading Dashboard...';
+        
         document.getElementById('view-login').classList.remove('active-view');
         document.getElementById('appContainer').classList.remove('hidden-app');
         initMaps();
-        await fetchAndRenderComplaints();
         switchView('dashboard');
+        
+        await fetchAndRenderComplaints();
+        
         if (pollingInterval) clearInterval(pollingInterval);
         pollingInterval = setInterval(fetchAndRenderComplaints, 15000);
     } catch (error) {
         err.innerText = error.message;
+    } finally {
+        submitBtn.innerText = originalBtnText;
+        submitBtn.disabled = false;
     }
 };
 window.handleLogout = () => {
