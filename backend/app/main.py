@@ -4,6 +4,12 @@ from fastapi.staticfiles import StaticFiles
 from . import database, models
 from .routers import auth, complaints, upload
 models.Base.metadata.create_all(bind=database.engine)
+try:
+    import seed
+    seed.seed()
+except Exception as e:
+    print("Failed to run seed script:", e)
+
 app = FastAPI(title="Gram Panchayat Secure API")
 origins = [
     "http://localhost:5173",
