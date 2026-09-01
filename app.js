@@ -2,7 +2,18 @@ const isLocal = window.location.hostname === 'localhost' || window.location.host
 const BASE_URL = isLocal ? 'http://localhost:8080' : 'https://gram-panchayat-api-wd18.onrender.com';
 const API_URL = `${BASE_URL}/api/v1`;
 const formatDate = (dateString) => {
-    const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    // Ensure the date is treated as UTC if the backend sends a naive timestamp
+    if (dateString && !dateString.endsWith('Z') && !dateString.includes('+')) {
+        dateString += 'Z';
+    }
+    const options = { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: 'Asia/Kolkata'
+    };
     return new Date(dateString).toLocaleDateString('en-IN', options);
 };
 const getStatusDetails = (status) => {
