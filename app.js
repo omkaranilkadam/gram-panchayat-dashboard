@@ -187,15 +187,22 @@ window.openComplaintModal = (id) => {
     const statusInfo = getStatusDetails(complaint.status);
     const imgUrl = complaint.media_urls ? `${BASE_URL}${complaint.media_urls}` : 'assets/pothole.jpg';
     document.getElementById('modalBody').innerHTML = `
-        <div class="modal-media">
-            <img src="${imgUrl}" alt="Complaint Evidence" onerror="this.src='assets/pothole.jpg'">
-        </div>
         <div class="modal-details">
             <div class="modal-header-row">
                 <h2 class="modal-title">${complaint.title}</h2>
                 <span class="badge ${statusInfo.class}"><i class="ph ${statusInfo.icon}"></i> ${statusInfo.label}</span>
             </div>
             <p class="modal-desc">${complaint.description}</p>
+            
+            ${complaint.media_urls ? `
+            <div class="modal-gallery-section">
+                <h5 class="gallery-title"><i class="ph ph-image"></i> Uploaded Evidence</h5>
+                <div class="gallery-grid">
+                    <img src="${imgUrl}" alt="Evidence" class="gallery-img" onclick="window.open(this.src, '_blank')">
+                </div>
+            </div>
+            ` : ''}
+            
             <div class="modal-meta-grid">
                 <div class="meta-item">
                     <div class="meta-icon"><i class="ph ph-map-pin-line"></i></div>
