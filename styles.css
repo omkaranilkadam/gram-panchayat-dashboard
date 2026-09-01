@@ -730,7 +730,7 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: url('assets/login-bg.jpg') center/cover no-repeat;
+    background: url('assets/gov-login-bg.jpg') center/cover no-repeat;
     position: fixed;
     top: 0;
     left: 0;
