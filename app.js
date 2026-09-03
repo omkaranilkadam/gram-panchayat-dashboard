@@ -91,9 +91,16 @@ const renderMarkers = (data) => {
             // First load: fit bounds to show all markers
             const bounds = L.latLngBounds(latLngs);
             map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+            // Store bounds to fit later when fullMap becomes visible
+            window._pendingMapBounds = bounds;
         } else if (newestComplaint.id > lastComplaintId) {
             // New complaint arrived via polling! Fly map to the new location
             map.flyTo([newestComplaint.latitude, newestComplaint.longitude], 15, { animate: true, duration: 1.5 });
+            // Store location to fly later if fullMap is opened
+            window._pendingMapFlyTo = [newestComplaint.latitude, newestComplaint.longitude];
+            if (document.getElementById('view-map').classList.contains('active-view') && fullMap) {
+                fullMap.flyTo([newestComplaint.latitude, newestComplaint.longitude], 15, { animate: true, duration: 1.5 });
+            }
         }
         lastComplaintId = newestComplaint.id;
     }
@@ -166,7 +173,17 @@ window.switchView = (viewName) => {
     if(viewName === 'dashboard' || viewName === 'map') {
         setTimeout(() => {
             if(map) map.invalidateSize();
-            if(fullMap) fullMap.invalidateSize();
+            if(fullMap) {
+                fullMap.invalidateSize();
+                if (window._pendingMapBounds) {
+                    fullMap.fitBounds(window._pendingMapBounds, { padding: [30, 30], maxZoom: 15 });
+                    window._pendingMapBounds = null; // Clear after applying
+                }
+                if (window._pendingMapFlyTo) {
+                    fullMap.flyTo(window._pendingMapFlyTo, 15);
+                    window._pendingMapFlyTo = null;
+                }
+            }
         }, 100);
     }
 };
