@@ -11,16 +11,10 @@ except Exception as e:
     print("Failed to run seed script:", e)
 
 app = FastAPI(title="Gram Panchayat Secure API")
-origins = [
-    "http://localhost:5173",
-    "http://localhost:8000",
-    "https://dashboard.grampanchayat.gov.in",
-    "https://omkaranilkadam.github.io",
-]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

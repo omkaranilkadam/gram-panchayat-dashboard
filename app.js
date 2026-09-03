@@ -1,5 +1,4 @@
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const BASE_URL = isLocal ? 'http://localhost:8080' : 'https://gram-panchayat-api-wd18.onrender.com';
+const BASE_URL = 'https://gram-panchayat-api-wd18.onrender.com';
 const API_URL = `${BASE_URL}/api/v1`;
 const formatDate = (dateString) => {
     // Ensure the date is treated as UTC if the backend sends a naive timestamp
