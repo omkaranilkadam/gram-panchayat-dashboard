@@ -13,7 +13,7 @@ const CONFIG = {
         const h = window.location.hostname;
         if (h === 'localhost' || h === '127.0.0.1' || /^192\.168\./.test(h))
             return `${window.location.protocol}//${h}:8002/api/v1`;
-        return 'https://gram-panchayat-api.onrender.com/api/v1';
+        return 'https://gram-panchayat-api-wd18.onrender.com/api/v1';
     })(),
     POLL_INTERVAL: 30_000,
     MAP_CENTER: [21.1458, 79.0882],
