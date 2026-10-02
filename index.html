@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gram Panchayat | Smart Dashboard</title>
+    <meta name="description" content="Digital Gram Panchayat Complaint Management System — Track, manage, and resolve village infrastructure complaints efficiently.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- ═══ Toast Container ═══ -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ═══ LOGIN VIEW ═══ -->
+    <div id="view-login" class="login-container active-view">
+        <div class="login-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+        <div class="login-card glass-card">
+            <div class="login-header">
+                <div class="logo-icon">
+                    <i class="ph-fill ph-buildings"></i>
+                </div>
+                <h2>ग्राम पंचायत</h2>
+                <p>Admin Dashboard Login</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-icon-wrap">
+                        <i class="ph ph-user"></i>
+                        <input type="text" id="username" class="modern-input icon-input" placeholder="admin@grampanchayat.in" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-icon-wrap">
+                        <i class="ph ph-lock"></i>
+                        <input type="password" id="password" class="modern-input icon-input" placeholder="Enter password" required>
+                    </div>
+                </div>
+                <div id="loginError" class="login-error"></div>
+                <button type="submit" class="btn btn-primary login-btn" id="loginBtn">
+                    <span class="btn-text">Login</span>
+                    <span class="btn-loader hidden"><i class="ph ph-circle-notch spinning"></i></span>
+                </button>
+            </form>
+            <div class="login-footer">
+                <small>Default: <strong>admin@grampanchayat.in</strong> / <strong>admin123</strong></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MAIN APP ═══ -->
+    <div class="app-container hidden-app" id="appContainer">
+
+        <!-- Mobile Header -->
+        <div class="mobile-header" id="mobileHeader">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+                <i class="ph ph-list"></i>
+            </button>
+            <h2>Gram Panchayat</h2>
+            <button class="icon-btn" id="mobileNotifBtn">
+                <i class="ph ph-bell"></i>
+            </button>
+        </div>
+
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ═══ SIDEBAR ═══ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-box">
+                    <i class="ph-fill ph-buildings"></i>
+                </div>
+                <div>
+                    <h2>Gram Panchayat</h2>
+                    <small class="text-muted" id="sidebarSubtitle"></small>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a class="nav-item active" data-view="dashboard" id="nav-dashboard">
+                    <i class="ph ph-squares-four"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" data-view="map" id="nav-map">
+                    <i class="ph ph-map-pin"></i>
+                    <span>Live Map</span>
+                </a>
+                <a class="nav-item" data-view="complaints" id="nav-complaints">
+                    <i class="ph ph-warning-circle"></i>
+                    <span>Complaints</span>
+                    <span class="badge new-badge" id="newComplaintsBadge"></span>
+                </a>
+                <a class="nav-item" data-view="analytics" id="nav-analytics">
+                    <i class="ph ph-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a class="nav-item" data-view="settings" id="nav-settings">
+                    <i class="ph ph-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar-initials" id="userAvatar">SA</div>
+                    <div class="user-info">
+                        <h4 id="userName">Admin</h4>
+                        <p>Administrator</p>
+                    </div>
+                </div>
+                <button class="btn btn-outline btn-sm logout-btn" id="logoutBtn">
+                    <i class="ph ph-sign-out"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-search">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Search complaints, wards, locations...">
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary btn-sm new-complaint-trigger" id="newComplaintBtn">
+                        <i class="ph ph-plus"></i>
+                        <span class="hide-mobile">New Complaint</span>
+                    </button>
+                    <div class="notif-wrapper">
+                        <button class="icon-btn action-btn" id="notifBellBtn">
+                            <i class="ph ph-bell"></i>
+                            <span class="notification-dot" id="notificationDot"></span>
+                        </button>
+                        <div class="notifications-dropdown glass-card" id="notificationsDropdown">
+                            <div class="notif-header">
+                                <h4>Notifications</h4>
+                                <button class="btn btn-sm btn-ghost" id="clearNotifsBtn">Clear All</button>
+                            </div>
+                            <div id="notificationsList" class="notif-list"></div>
+                            <div class="notif-empty" id="notifEmpty">
+                                <i class="ph ph-bell-slash"></i>
+                                <p>No new notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ═══════════ DASHBOARD VIEW ═══════════ -->
+            <div id="view-dashboard" class="view-section active-view">
+                <div class="dashboard-grid">
+
+                    <!-- Stats Row -->
+                    <div class="stats-container">
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon warning"><i class="ph ph-file-text"></i></div>
+                            <div class="stat-details">
+                                <h3>Total Complaints</h3>
+                                <div class="stat-value" id="stat-total">—</div>
+                                <div class="stat-trend positive"><i class="ph ph-trend-up"></i> Active tracking</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon danger"><i class="ph ph-hourglass-high"></i></div>
+                            <div class="stat-details">
+                                <h3>Pending</h3>
+                                <div class="stat-value" id="stat-pending">—</div>
+                                <div class="stat-trend negative"><i class="ph ph-warning-circle"></i> Requires attention</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon success"><i class="ph ph-check-circle"></i></div>
+                            <div class="stat-details">
+                                <h3>Resolved</h3>
+                                <div class="stat-value" id="stat-resolved">—</div>
+                                <div class="stat-trend positive"><i class="ph ph-trend-up"></i> <span id="resolutionRate">0%</span> rate</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon info"><i class="ph ph-wrench"></i></div>
+                            <div class="stat-details">
+                                <h3>In Progress</h3>
+                                <div class="stat-value" id="stat-inprogress">—</div>
+                                <div class="stat-trend info"><i class="ph ph-arrows-clockwise"></i> Currently working</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map + Feed Row -->
+                    <div class="content-row">
+                        <div class="map-section glass-card">
+                            <div class="section-header">
+                                <h3><i class="ph ph-map-trifold"></i> Live Geotag Map</h3>
+                                <select class="modern-select compact" id="mapFilter">
+                                    <option value="all">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="resolved">Resolved</option>
+                                </select>
+                            </div>
+                            <div id="map" class="map-container"></div>
+                        </div>
+
+                        <div class="feed-section glass-card">
+                            <div class="section-header">
+                                <h3><i class="ph ph-list-dashes"></i> Recent</h3>
+                                <button class="btn btn-outline btn-sm" data-navigate="complaints">View All</button>
+                            </div>
+                            <div class="complaints-list" id="complaintsList">
+                                <div class="skeleton-card"><div class="skeleton-line w-60"></div><div class="skeleton-line w-100"></div><div class="skeleton-line w-40"></div></div>
+                                <div class="skeleton-card"><div class="skeleton-line w-60"></div><div class="skeleton-line w-100"></div><div class="skeleton-line w-40"></div></div>
+                                <div class="skeleton-card"><div class="skeleton-line w-60"></div><div class="skeleton-line w-100"></div><div class="skeleton-line w-40"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="charts-row">
+                        <div class="chart-card glass-card">
+                            <div class="section-header"><h3><i class="ph ph-chart-donut"></i> By Category</h3></div>
+                            <div class="chart-wrapper"><canvas id="categoryChart"></canvas></div>
+                        </div>
+                        <div class="chart-card glass-card">
+                            <div class="section-header"><h3><i class="ph ph-chart-line-up"></i> Monthly Trend</h3></div>
+                            <div class="chart-wrapper"><canvas id="trendChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════ FULL MAP VIEW ═══════════ -->
+            <div id="view-map" class="view-section">
+                <div class="full-map-container glass-card">
+                    <div class="section-header">
+                        <h3><i class="ph ph-map-trifold"></i> Expanded Geotag Map</h3>
+                        <select class="modern-select compact" id="fullMapFilter">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div id="full-map" class="map-container"></div>
+                </div>
+            </div>
+
+            <!-- ═══════════ COMPLAINTS VIEW ═══════════ -->
+            <div id="view-complaints" class="view-section">
+                <div class="glass-card page-card">
+                    <div class="section-header complaints-header">
+                        <h3><i class="ph ph-list-dashes"></i> All Complaints</h3>
+                        <div class="complaints-toolbar">
+                            <select class="modern-select compact" id="filterStatus">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                            <select class="modern-select compact" id="filterCategory">
+                                <option value="all">All Categories</option>
+                                <option value="road">Road</option>
+                                <option value="water">Water</option>
+                                <option value="electricity">Electricity</option>
+                                <option value="sanitation">Sanitation</option>
+                                <option value="drainage">Drainage</option>
+                                <option value="public_property">Public Property</option>
+                                <option value="animal_control">Animal Control</option>
+                                <option value="encroachment">Encroachment</option>
+                            </select>
+                            <select class="modern-select compact" id="filterPriority">
+                                <option value="all">All Priority</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" id="exportCsvBtn">
+                                <i class="ph ph-download-simple"></i> <span class="hide-mobile">Export CSV</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="complaints-list full-list" id="fullComplaintsList"></div>
+                    <div class="empty-state hidden" id="complaintsEmpty">
+                        <i class="ph ph-clipboard-text"></i>
+                        <h4>No complaints found</h4>
+                        <p>Try adjusting your filters or search query.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════ ANALYTICS VIEW ═══════════ -->
+            <div id="view-analytics" class="view-section">
+                <div class="analytics-grid">
+                    <div class="chart-card glass-card span-2">
+                        <div class="section-header"><h3><i class="ph ph-chart-line-up"></i> Complaints Over Time</h3></div>
+                        <div class="chart-wrapper lg"><canvas id="analyticsTimeChart"></canvas></div>
+                    </div>
+                    <div class="chart-card glass-card">
+                        <div class="section-header"><h3><i class="ph ph-chart-donut"></i> Category Distribution</h3></div>
+                        <div class="chart-wrapper"><canvas id="analyticsCategoryChart"></canvas></div>
+                    </div>
+                    <div class="chart-card glass-card">
+                        <div class="section-header"><h3><i class="ph ph-chart-bar"></i> Priority Breakdown</h3></div>
+                        <div class="chart-wrapper"><canvas id="analyticsPriorityChart"></canvas></div>
+                    </div>
+                    <div class="chart-card glass-card">
+                        <div class="section-header"><h3><i class="ph ph-chart-pie-slice"></i> Status Overview</h3></div>
+                        <div class="chart-wrapper"><canvas id="analyticsStatusChart"></canvas></div>
+                    </div>
+                    <div class="chart-card glass-card">
+                        <div class="section-header"><h3><i class="ph ph-map-pin-area"></i> By Ward</h3></div>
+                        <div class="chart-wrapper"><canvas id="analyticsWardChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════ SETTINGS VIEW ═══════════ -->
+            <div id="view-settings" class="view-section">
+                <div class="glass-card page-card settings-page">
+                    <div class="section-header">
+                        <h3><i class="ph ph-gear"></i> System Settings</h3>
+                    </div>
+                    <div class="settings-grid">
+                        <div class="settings-section">
+                            <h4><i class="ph ph-buildings"></i> Panchayat Information</h4>
+                            <div class="form-group">
+                                <label for="settPanchayatName">Panchayat Name (Hindi)</label>
+                                <input type="text" id="settPanchayatName" class="modern-input" placeholder="ग्राम पंचायत">
+                            </div>
+                            <div class="form-group">
+                                <label for="settPanchayatNameEn">Panchayat Name (English)</label>
+                                <input type="text" id="settPanchayatNameEn" class="modern-input" placeholder="Gram Panchayat">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="settVillage">Village</label><input type="text" id="settVillage" class="modern-input" placeholder="Village name"></div>
+                                <div class="form-group"><label for="settDistrict">District</label><input type="text" id="settDistrict" class="modern-input" placeholder="District"></div>
+                            </div>
+                            <div class="form-group"><label for="settState">State</label><input type="text" id="settState" class="modern-input" placeholder="Maharashtra"></div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="ph ph-user-circle"></i> Admin Settings</h4>
+                            <div class="form-group"><label for="settAdminName">Admin Name</label><input type="text" id="settAdminName" class="modern-input" placeholder="Sarpanch name"></div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="settPhone">Contact Phone</label><input type="tel" id="settPhone" class="modern-input" placeholder="+91 ..."></div>
+                                <div class="form-group"><label for="settEmail">Contact Email</label><input type="email" id="settEmail" class="modern-input" placeholder="email@example.com"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="ph ph-sliders-horizontal"></i> Preferences</h4>
+                            <div class="settings-toggle">
+                                <div><label>Notification Alerts</label><small>Receive alerts for new complaints</small></div>
+                                <label class="switch"><input type="checkbox" id="settNotifications" checked><span class="slider round"></span></label>
+                            </div>
+                            <div class="settings-toggle">
+                                <div><label>Dark Mode</label><small>Switch to dark theme</small></div>
+                                <label class="switch"><input type="checkbox" id="settDarkMode"><span class="slider round"></span></label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary settings-save-btn" id="saveSettingsBtn">
+                            <i class="ph ph-floppy-disk"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ═══ NEW COMPLAINT MODAL ═══ -->
+    <div class="modal-backdrop" id="newComplaintModal">
+        <div class="modal-content glass-card nc-modal">
+            <button class="close-btn" data-close="newComplaintModal"><i class="ph ph-x"></i></button>
+            <div class="modal-form-wrapper">
+                <h2><i class="ph ph-plus-circle"></i> Register New Complaint</h2>
+                <form id="newComplaintForm">
+                    <div class="form-group">
+                        <label for="ncTitle">Title *</label>
+                        <input type="text" id="ncTitle" class="modern-input" placeholder="Brief description of the issue" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="ncDescription">Description *</label>
+                        <textarea id="ncDescription" class="modern-input modern-textarea" placeholder="Detailed description of the problem..." required rows="3" minlength="5"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ncCategory">Category *</label>
+                            <select id="ncCategory" class="modern-select" required>
+                                <option value="">Select category</option>
+                                <option value="road">🛣️ Road</option>
+                                <option value="water">💧 Water</option>
+                                <option value="electricity">⚡ Electricity</option>
+                                <option value="sanitation">🧹 Sanitation</option>
+                                <option value="drainage">🌊 Drainage</option>
+                                <option value="public_property">🏛️ Public Property</option>
+                                <option value="animal_control">🐄 Animal Control</option>
+                                <option value="encroachment">🚧 Encroachment</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ncPriority">Priority *</label>
+                            <select id="ncPriority" class="modern-select" required>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label for="ncWard">Ward</label><input type="text" id="ncWard" class="modern-input" placeholder="e.g. Ward 1"></div>
+                        <div class="form-group"><label for="ncName">Complainant</label><input type="text" id="ncName" class="modern-input" placeholder="Full name"></div>
+                    </div>
+                    <div class="form-group"><label for="ncPhone">Phone</label><input type="tel" id="ncPhone" class="modern-input" placeholder="+91 9876543210"></div>
+                    <div class="form-row geo-row">
+                        <div class="form-group"><label for="ncLat">Latitude *</label><input type="number" id="ncLat" class="modern-input" step="any" placeholder="21.1458" required></div>
+                        <div class="form-group"><label for="ncLng">Longitude *</label><input type="number" id="ncLng" class="modern-input" step="any" placeholder="79.0882" required></div>
+                        <div class="form-group geo-btn-wrap"><button type="button" class="btn btn-outline btn-sm" id="geolocateBtn"><i class="ph ph-crosshair"></i> Detect</button></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="ncImage">Photo Evidence</label>
+                        <input type="file" id="ncImage" class="modern-input file-input" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-primary submit-btn" id="submitComplaintBtn">
+                        <span class="btn-text"><i class="ph ph-paper-plane-tilt"></i> Submit Complaint</span>
+                        <span class="btn-loader hidden"><i class="ph ph-circle-notch spinning"></i> Submitting...</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ COMPLAINT DETAIL MODAL ═══ -->
+    <div class="modal-backdrop" id="complaintModal">
+        <div class="modal-content glass-card detail-modal">
+            <button class="close-btn" data-close="complaintModal"><i class="ph ph-x"></i></button>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- ═══ CONFIRM DIALOG ═══ -->
+    <div class="modal-backdrop" id="confirmDialog">
+        <div class="confirm-card glass-card">
+            <i class="ph ph-warning-circle confirm-icon"></i>
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="confirm-actions">
+                <button class="btn btn-outline" id="confirmCancel">Cancel</button>
+                <button class="btn btn-primary" id="confirmOk">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="app.js"></script>
+</body>
+</html>
