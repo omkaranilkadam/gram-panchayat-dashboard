@@ -58,14 +58,16 @@ const statusMap = {
 const getStatus = (s) => statusMap[s] || { label: s, icon: 'ph-question', cls: '' };
 
 const categoryLabels = {
-    road: '🛣️ Road', water: '💧 Water', electricity: '⚡ Electricity',
-    sanitation: '🧹 Sanitation', drainage: '🌊 Drainage',
-    public_property: '🏛️ Public Property', animal_control: '🐄 Animal Control',
-    encroachment: '🚧 Encroachment',
+    'Billing & Payments': '💸 Billing & Payments',
+    'Service Disruption': '🚫 Service Disruption',
+    'Technical Issue': '⚙️ Technical Issue',
+    'Customer Service': '🎧 Customer Service',
+    'Property Damage': '🏚️ Property Damage',
+    'Other Dispute': '⚖️ Other Dispute'
 };
 const getCategoryLabel = (c) => categoryLabels[c] || c;
 
-const priorityLabels = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+const priorityLabels = { Urgent: 'Urgent', High: 'High', Medium: 'Medium', Low: 'Low' };
 
 const imgUrl = (path) => {
     if (!path) return '';
@@ -122,7 +124,14 @@ async function api(path, opts = {}) {
     }
     try {
         const res = await fetch(`${CONFIG.API_URL}${path}`, { ...opts, headers });
-        if (res.status === 401) { handleLogout(); throw new Error('Session expired'); }
+        if (res.status === 401) { 
+            if (path === '/auth/login') {
+                const e = await res.json().catch(() => ({}));
+                throw new Error(e.detail || 'Incorrect username or password');
+            }
+            handleLogout(); 
+            throw new Error('Session expired'); 
+        }
         if (res.status === 204) return null;
         if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || `HTTP ${res.status}`); }
         return res.json();
@@ -497,7 +506,7 @@ function renderAnalyticsCharts(d) {
     // Priority bar
     destroyChart('analyticsPri');
     const priLabels = Object.keys(d.priorities);
-    const priColors = { critical: '#ef4444', high: '#f59e0b', medium: '#3b82f6', low: '#10b981' };
+    const priColors = { Urgent: '#ef4444', High: '#f59e0b', Medium: '#3b82f6', Low: '#10b981' };
     S.charts.analyticsPri = new Chart($('#analyticsPriorityChart'), {
         type: 'bar',
         data: { labels: priLabels.map(p => priorityLabels[p] || p), datasets: [{ label: 'Count', data: Object.values(d.priorities), backgroundColor: priLabels.map(p => priColors[p] || '#94a3b8'), borderRadius: 6 }] },
@@ -530,7 +539,7 @@ window.openDetail = async function (id) {
     try { complaint = await api(`/complaints/${id}`); } catch { showToast('Failed to load complaint', 'error'); return; }
 
     const st = getStatus(complaint.status);
-    const image = imgUrl(complaint.media_urls);
+    const mediaList = complaint.media_urls ? complaint.media_urls.split(',').map(u => u.trim()).filter(u => u) : [];
 
     let timelineHtml = '';
     if (complaint.notes && complaint.notes.length > 0) {
@@ -564,12 +573,13 @@ window.openDetail = async function (id) {
             </div>`;
     }
 
+    const mediaHtml = mediaList.length > 0
+        ? mediaList.map(url => `<img src="${imgUrl(url)}" alt="Evidence" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'ph ph-image-broken\\'></i><p>Image unavailable</p></div>'">`).join('')
+        : `<div class="no-image"><i class="ph ph-camera-slash"></i><p>No photo attached</p></div>`;
+
     $('#modalBody').innerHTML = `
-        <div class="modal-media">
-            ${image
-                ? `<img src="${image}" alt="Evidence" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'ph ph-image-broken\\'></i><p>Image unavailable</p></div>'">`
-                : `<div class="no-image"><i class="ph ph-camera-slash"></i><p>No photo attached</p></div>`
-            }
+        <div class="modal-media" style="display: flex; overflow-x: auto; gap: 10px;">
+            ${mediaHtml}
         </div>
         <div class="modal-details">
             <div class="modal-header-row">
@@ -587,6 +597,8 @@ window.openDetail = async function (id) {
                 <div class="meta-item"><div class="meta-icon"><i class="ph ph-hash"></i></div><div class="meta-info"><h5>ID</h5><p>#${complaint.id}</p></div></div>
                 ${complaint.complainant_name ? `<div class="meta-item"><div class="meta-icon"><i class="ph ph-user"></i></div><div class="meta-info"><h5>Complainant</h5><p>${complaint.complainant_name}</p></div></div>` : ''}
                 ${complaint.complainant_phone ? `<div class="meta-item"><div class="meta-icon"><i class="ph ph-phone"></i></div><div class="meta-info"><h5>Phone</h5><p>${complaint.complainant_phone}</p></div></div>` : ''}
+                ${complaint.complainant_address ? `<div class="meta-item"><div class="meta-icon"><i class="ph ph-map-pin"></i></div><div class="meta-info"><h5>Address</h5><p>${complaint.complainant_address}</p></div></div>` : ''}
+                ${complaint.incident_date ? `<div class="meta-item"><div class="meta-icon"><i class="ph ph-calendar-x"></i></div><div class="meta-info"><h5>Incident Date</h5><p>${complaint.incident_date}</p></div></div>` : ''}
             </div>
             ${timelineHtml}
             <div class="modal-actions">
@@ -647,10 +659,14 @@ async function submitNewComplaint(e) {
         let mediaUrl = null;
         const fileInput = $('#ncImage');
         if (fileInput.files.length > 0) {
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            const uploadRes = await api('/upload/', { method: 'POST', body: formData });
-            mediaUrl = uploadRes.url;
+            const uploadPromises = Array.from(fileInput.files).map(async (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                const uploadRes = await api('/upload/', { method: 'POST', body: formData });
+                return uploadRes.url;
+            });
+            const uploadedUrls = await Promise.all(uploadPromises);
+            mediaUrl = uploadedUrls.join(',');
         }
 
         const body = {
@@ -663,6 +679,8 @@ async function submitNewComplaint(e) {
             ward: $('#ncWard').value.trim() || null,
             complainant_name: $('#ncName').value.trim() || null,
             complainant_phone: $('#ncPhone').value.trim() || null,
+            incident_date: $('#ncIncidentDate').value || null,
+            complainant_address: $('#ncAddress').value.trim() || null,
             media_urls: mediaUrl,
         };
 

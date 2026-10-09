@@ -281,21 +281,19 @@
                             </select>
                             <select class="modern-select compact" id="filterCategory">
                                 <option value="all">All Categories</option>
-                                <option value="road">Road</option>
-                                <option value="water">Water</option>
-                                <option value="electricity">Electricity</option>
-                                <option value="sanitation">Sanitation</option>
-                                <option value="drainage">Drainage</option>
-                                <option value="public_property">Public Property</option>
-                                <option value="animal_control">Animal Control</option>
-                                <option value="encroachment">Encroachment</option>
+                                <option value="Billing & Payments">Billing & Payments</option>
+                                <option value="Service Disruption">Service Disruption</option>
+                                <option value="Technical Issue">Technical Issue</option>
+                                <option value="Customer Service">Customer Service</option>
+                                <option value="Property Damage">Property Damage</option>
+                                <option value="Other Dispute">Other Dispute</option>
                             </select>
                             <select class="modern-select compact" id="filterPriority">
                                 <option value="all">All Priority</option>
-                                <option value="critical">Critical</option>
-                                <option value="high">High</option>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
                             </select>
                             <button class="btn btn-outline btn-sm" id="exportCsvBtn">
                                 <i class="ph ph-download-simple"></i> <span class="hide-mobile">Export CSV</span>
@@ -412,23 +410,21 @@
                             <label for="ncCategory">Category *</label>
                             <select id="ncCategory" class="modern-select" required>
                                 <option value="">Select category</option>
-                                <option value="road">🛣️ Road</option>
-                                <option value="water">💧 Water</option>
-                                <option value="electricity">⚡ Electricity</option>
-                                <option value="sanitation">🧹 Sanitation</option>
-                                <option value="drainage">🌊 Drainage</option>
-                                <option value="public_property">🏛️ Public Property</option>
-                                <option value="animal_control">🐄 Animal Control</option>
-                                <option value="encroachment">🚧 Encroachment</option>
+                                <option value="Billing & Payments">💸 Billing & Payments</option>
+                                <option value="Service Disruption">🚫 Service Disruption</option>
+                                <option value="Technical Issue">⚙️ Technical Issue</option>
+                                <option value="Customer Service">🎧 Customer Service</option>
+                                <option value="Property Damage">🏚️ Property Damage</option>
+                                <option value="Other Dispute">⚖️ Other Dispute</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="ncPriority">Priority *</label>
                             <select id="ncPriority" class="modern-select" required>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
-                                <option value="high">High</option>
-                                <option value="critical">Critical</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
                             </select>
                         </div>
                     </div>
@@ -436,7 +432,11 @@
                         <div class="form-group"><label for="ncWard">Ward</label><input type="text" id="ncWard" class="modern-input" placeholder="e.g. Ward 1"></div>
                         <div class="form-group"><label for="ncName">Complainant</label><input type="text" id="ncName" class="modern-input" placeholder="Full name"></div>
                     </div>
-                    <div class="form-group"><label for="ncPhone">Phone</label><input type="tel" id="ncPhone" class="modern-input" placeholder="+91 9876543210"></div>
+                    <div class="form-row">
+                        <div class="form-group"><label for="ncPhone">Phone</label><input type="tel" id="ncPhone" class="modern-input" placeholder="+91 9876543210"></div>
+                        <div class="form-group"><label for="ncIncidentDate">Incident Date</label><input type="date" id="ncIncidentDate" class="modern-input"></div>
+                    </div>
+                    <div class="form-group"><label for="ncAddress">Address</label><input type="text" id="ncAddress" class="modern-input" placeholder="Complainant Address"></div>
                     <div class="form-row geo-row">
                         <div class="form-group"><label for="ncLat">Latitude *</label><input type="number" id="ncLat" class="modern-input" step="any" placeholder="21.1458" required></div>
                         <div class="form-group"><label for="ncLng">Longitude *</label><input type="number" id="ncLng" class="modern-input" step="any" placeholder="79.0882" required></div>
@@ -444,7 +444,7 @@
                     </div>
                     <div class="form-group">
                         <label for="ncImage">Photo Evidence</label>
-                        <input type="file" id="ncImage" class="modern-input file-input" accept="image/*">
+                        <input type="file" id="ncImage" class="modern-input file-input" accept="image/*" multiple>
                     </div>
                     <button type="submit" class="btn btn-primary submit-btn" id="submitComplaintBtn">
                         <span class="btn-text"><i class="ph ph-paper-plane-tilt"></i> Submit Complaint</span>
