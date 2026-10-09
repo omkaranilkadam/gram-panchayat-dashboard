@@ -15,7 +15,13 @@ router = APIRouter(prefix="/api/v1/upload", tags=["upload"])
 # Initialize Firebase Admin if not already initialized
 if not firebase_admin._apps:
     # Use environment variable for production, or local file for development
-    cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH", "firebase-adminsdk.json")
+    cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH")
+    if not cred_path:
+        if os.path.exists("/etc/secrets/firebase-adminsdk.json"):
+            cred_path = "/etc/secrets/firebase-adminsdk.json"
+        else:
+            cred_path = "firebase-adminsdk.json"
+            
     try:
         cred = credentials.Certificate(cred_path)
         firebase_admin.initialize_app(cred, {
@@ -57,19 +63,23 @@ async def upload_image(
     
     # Upload to Firebase Storage
     try:
+        if not firebase_admin._apps:
+            raise Exception("Firebase Admin is not initialized.")
+            
         bucket = storage.bucket()
         blob = bucket.blob(f"uploads/{filename}")
+        
+        # Generate a download token to make it accessible without making the whole bucket public
+        download_token = str(uuid.uuid4())
+        blob.metadata = {"firebaseStorageDownloadTokens": download_token}
         
         # Set content type properly
         blob.upload_from_string(content, content_type=content_type)
         
-        # Make the file publicly accessible
-        blob.make_public()
-        
-        # Get the public URL
-        public_url = blob.public_url
+        # Build the standard Firebase Storage URL
+        public_url = f"https://firebasestorage.googleapis.com/v0/b/{bucket.name}/o/uploads%2F{filename}?alt=media&token={download_token}"
         
         return {"url": public_url}
     except Exception as e:
         print(f"Firebase upload error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to upload image to Firebase storage.")
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
