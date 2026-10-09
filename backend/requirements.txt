@@ -6,5 +6,5 @@ python-jose[cryptography]
 python-multipart
 pydantic
 python-dotenv
-requests
+cloudinary
 psycopg2-binary
