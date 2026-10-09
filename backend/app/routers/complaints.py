@@ -60,7 +60,6 @@ def get_complaint(
 def create_complaint(
     complaint: schemas.ComplaintCreate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(dependencies.get_current_user),
 ):
     """Register a new complaint and auto-create a timeline note."""
     db_complaint = models.Complaint(**complaint.model_dump())
@@ -69,9 +68,10 @@ def create_complaint(
     db.refresh(db_complaint)
 
     # Auto-add creation note to the timeline
+    author_name = db_complaint.complainant_name or "Citizen"
     note = models.ComplaintNote(
         complaint_id=db_complaint.id,
-        author=current_user.full_name or current_user.username,
+        author=author_name,
         content="Complaint registered with status 'pending'",
         note_type="status_change",
     )
