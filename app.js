@@ -539,7 +539,13 @@ window.openDetail = async function (id) {
     try { complaint = await api(`/complaints/${id}`); } catch { showToast('Failed to load complaint', 'error'); return; }
 
     const st = getStatus(complaint.status);
-    const mediaList = complaint.media_urls ? complaint.media_urls.split(',').map(u => u.trim()).filter(u => u) : [];
+    let mediaList = [];
+    if (complaint.media_urls) {
+        let raw = complaint.media_urls.trim();
+        // Remove brackets and quotes if sent as a stringified list (e.g. from Flutter)
+        raw = raw.replace(/^\[|\]$/g, '').replace(/["']/g, '');
+        mediaList = raw.split(',').map(u => u.trim()).filter(u => u);
+    }
 
     let timelineHtml = '';
     if (complaint.notes && complaint.notes.length > 0) {
