@@ -3,33 +3,14 @@ File upload router with validation (type + size).
 """
 import os
 import uuid
+import base64
+import requests
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
-import firebase_admin
-from firebase_admin import credentials, storage
 
 from .. import dependencies, models
 from ..config import UPLOAD_DIR
 
 router = APIRouter(prefix="/api/v1/upload", tags=["upload"])
-
-# Initialize Firebase Admin if not already initialized
-if not firebase_admin._apps:
-    # Use environment variable for production, or local file for development
-    cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH")
-    if not cred_path:
-        if os.path.exists("/etc/secrets/firebase-adminsdk.json"):
-            cred_path = "/etc/secrets/firebase-adminsdk.json"
-        else:
-            cred_path = "firebase-adminsdk.json"
-            
-    try:
-        cred = credentials.Certificate(cred_path)
-        firebase_admin.initialize_app(cred, {
-            'storageBucket': 'grampanchayat-3385d.appspot.com'
-        })
-        print("Firebase Admin initialized successfully.")
-    except Exception as e:
-        print(f"Failed to initialize Firebase Admin: {e}")
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 MAX_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -58,28 +39,27 @@ async def upload_image(
             status_code=400, detail="File too large. Maximum size is 20 MB."
         )
 
-    extension = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
-    filename = f"{uuid.uuid4()}.{extension}"
-    
-    # Upload to Firebase Storage
+    # Upload to ImgBB
+    api_key = os.environ.get("IMGBB_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="ImgBB API key is not configured on the server.")
+
     try:
-        if not firebase_admin._apps:
-            raise Exception("Firebase Admin is not initialized.")
-            
-        bucket = storage.bucket()
-        blob = bucket.blob(f"uploads/{filename}")
+        # ImgBB API requires the image to be base64 encoded or passed as a file
+        response = requests.post(
+            "https://api.imgbb.com/1/upload",
+            data={
+                "key": api_key,
+                "image": base64.b64encode(content).decode('utf-8')
+            }
+        )
         
-        # Generate a download token to make it accessible without making the whole bucket public
-        download_token = str(uuid.uuid4())
-        blob.metadata = {"firebaseStorageDownloadTokens": download_token}
-        
-        # Set content type properly
-        blob.upload_from_string(content, content_type=content_type)
-        
-        # Build the standard Firebase Storage URL
-        public_url = f"https://firebasestorage.googleapis.com/v0/b/{bucket.name}/o/uploads%2F{filename}?alt=media&token={download_token}"
-        
-        return {"url": public_url}
+        response_data = response.json()
+        if response.status_code == 200 and response_data.get("success"):
+            return {"url": response_data["data"]["url"]}
+        else:
+            print(f"ImgBB upload error: {response_data}")
+            raise Exception(response_data.get("error", {}).get("message", "Unknown error"))
     except Exception as e:
-        print(f"Firebase upload error: {e}")
+        print(f"ImgBB upload error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")

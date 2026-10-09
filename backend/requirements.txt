@@ -6,5 +6,5 @@ python-jose[cryptography]
 python-multipart
 pydantic
 python-dotenv
-firebase-admin
+requests
 psycopg2-binary
