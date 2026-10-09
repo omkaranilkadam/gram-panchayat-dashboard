@@ -79,3 +79,15 @@ class PanchayatSettings(Base):
     contact_email = Column(String(255), default="")
     notifications_enabled = Column(Boolean, default=True)
     dark_mode = Column(Boolean, default=False)
+
+
+class Notice(Base):
+    """Notice board announcements."""
+    __tablename__ = "notices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    author = Column(String(255), nullable=True, default="Admin")
+    created_at = Column(DateTime, default=datetime.utcnow)
+

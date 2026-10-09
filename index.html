@@ -112,6 +112,10 @@
                     <span>Complaints</span>
                     <span class="badge new-badge" id="newComplaintsBadge"></span>
                 </a>
+                <a class="nav-item" data-view="notices" id="nav-notices">
+                    <i class="ph ph-megaphone"></i>
+                    <span>Notice Board</span>
+                </a>
                 <a class="nav-item" data-view="analytics" id="nav-analytics">
                     <i class="ph ph-chart-bar"></i>
                     <span>Analytics</span>
@@ -145,10 +149,6 @@
                     <input type="text" id="searchInput" placeholder="Search complaints, wards, locations...">
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-primary btn-sm new-complaint-trigger" id="newComplaintBtn">
-                        <i class="ph ph-plus"></i>
-                        <span class="hide-mobile">New Complaint</span>
-                    </button>
                     <div class="notif-wrapper">
                         <button class="icon-btn action-btn" id="notifBellBtn">
                             <i class="ph ph-bell"></i>
@@ -387,68 +387,42 @@
                 </div>
             </div>
 
+            <!-- ═══════════ NOTICE BOARD VIEW ═══════════ -->
+            <div id="view-notices" class="view-section">
+                <div class="glass-card page-card">
+                    <div class="section-header">
+                        <h3><i class="ph ph-megaphone"></i> Notice Board</h3>
+                        <button class="btn btn-primary btn-sm" id="newNoticeBtn">
+                            <i class="ph ph-plus"></i> New Notice
+                        </button>
+                    </div>
+                    <div class="notices-list" id="noticesList">
+                        <!-- Notices will be populated here -->
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- ═══ NEW COMPLAINT MODAL ═══ -->
-    <div class="modal-backdrop" id="newComplaintModal">
+    <!-- ═══ NEW NOTICE MODAL ═══ -->
+    <div class="modal-backdrop" id="newNoticeModal">
         <div class="modal-content glass-card nc-modal">
-            <button class="close-btn" data-close="newComplaintModal"><i class="ph ph-x"></i></button>
+            <button class="close-btn" data-close="newNoticeModal"><i class="ph ph-x"></i></button>
             <div class="modal-form-wrapper">
-                <h2><i class="ph ph-plus-circle"></i> Register New Complaint</h2>
-                <form id="newComplaintForm">
+                <h2><i class="ph ph-plus-circle"></i> Add New Notice</h2>
+                <form id="newNoticeForm">
                     <div class="form-group">
-                        <label for="ncTitle">Title *</label>
-                        <input type="text" id="ncTitle" class="modern-input" placeholder="Brief description of the issue" required minlength="3">
-                    </div>
-                    <div class="form-group">
-                        <label for="ncDescription">Description *</label>
-                        <textarea id="ncDescription" class="modern-input modern-textarea" placeholder="Detailed description of the problem..." required rows="3" minlength="5"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="ncCategory">Category *</label>
-                            <select id="ncCategory" class="modern-select" required>
-                                <option value="">Select category</option>
-                                <option value="Billing & Payments">💸 Billing & Payments</option>
-                                <option value="Service Disruption">🚫 Service Disruption</option>
-                                <option value="Technical Issue">⚙️ Technical Issue</option>
-                                <option value="Customer Service">🎧 Customer Service</option>
-                                <option value="Property Damage">🏚️ Property Damage</option>
-                                <option value="Other Dispute">⚖️ Other Dispute</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="ncPriority">Priority *</label>
-                            <select id="ncPriority" class="modern-select" required>
-                                <option value="Urgent">Urgent</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label for="ncWard">Ward</label><input type="text" id="ncWard" class="modern-input" placeholder="e.g. Ward 1"></div>
-                        <div class="form-group"><label for="ncName">Complainant</label><input type="text" id="ncName" class="modern-input" placeholder="Full name"></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label for="ncPhone">Phone</label><input type="tel" id="ncPhone" class="modern-input" placeholder="+91 9876543210"></div>
-                        <div class="form-group"><label for="ncIncidentDate">Incident Date</label><input type="date" id="ncIncidentDate" class="modern-input"></div>
-                    </div>
-                    <div class="form-group"><label for="ncAddress">Address</label><input type="text" id="ncAddress" class="modern-input" placeholder="Complainant Address"></div>
-                    <div class="form-row geo-row">
-                        <div class="form-group"><label for="ncLat">Latitude *</label><input type="number" id="ncLat" class="modern-input" step="any" placeholder="21.1458" required></div>
-                        <div class="form-group"><label for="ncLng">Longitude *</label><input type="number" id="ncLng" class="modern-input" step="any" placeholder="79.0882" required></div>
-                        <div class="form-group geo-btn-wrap"><button type="button" class="btn btn-outline btn-sm" id="geolocateBtn"><i class="ph ph-crosshair"></i> Detect</button></div>
+                        <label for="noticeTitle">Title *</label>
+                        <input type="text" id="noticeTitle" class="modern-input" placeholder="e.g. Village Meeting Tomorrow" required minlength="3">
                     </div>
                     <div class="form-group">
-                        <label for="ncImage">Photo Evidence</label>
-                        <input type="file" id="ncImage" class="modern-input file-input" accept="image/*" multiple>
+                        <label for="noticeContent">Content *</label>
+                        <textarea id="noticeContent" class="modern-input modern-textarea" placeholder="Detailed information..." required rows="5" minlength="5"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary submit-btn" id="submitComplaintBtn">
-                        <span class="btn-text"><i class="ph ph-paper-plane-tilt"></i> Submit Complaint</span>
-                        <span class="btn-loader hidden"><i class="ph ph-circle-notch spinning"></i> Submitting...</span>
+                    <button type="submit" class="btn btn-primary submit-btn" id="submitNoticeBtn">
+                        <span class="btn-text"><i class="ph ph-paper-plane-tilt"></i> Post Notice</span>
+                        <span class="btn-loader hidden"><i class="ph ph-circle-notch spinning"></i> Posting...</span>
                     </button>
                 </form>
             </div>

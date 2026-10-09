@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .database import engine, Base
 from .config import CORS_ORIGINS, UPLOAD_DIR
-from .routers import auth, complaints, upload, stats, settings
+from .routers import auth, complaints, upload, stats, settings, notices
 
 
 @asynccontextmanager
@@ -43,6 +43,7 @@ app.include_router(complaints.router)
 app.include_router(upload.router)
 app.include_router(stats.router)
 app.include_router(settings.router)
+app.include_router(notices.router)
 
 
 @app.get("/")

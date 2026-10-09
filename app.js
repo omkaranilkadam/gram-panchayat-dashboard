@@ -193,7 +193,7 @@ async function enterApp() {
     updateUserUI();
 
     initMaps();
-    await Promise.all([fetchComplaints(), fetchStats(), fetchSettings()]);
+    await Promise.all([fetchComplaints(), fetchStats(), fetchSettings(), fetchNotices()]);
     switchView('dashboard');
     startPolling();
 }
@@ -209,7 +209,7 @@ function updateUserUI() {
 function startPolling() {
     if (S.pollId) clearInterval(S.pollId);
     S.pollId = setInterval(async () => {
-        await Promise.all([fetchComplaints(), fetchStats()]);
+        await Promise.all([fetchComplaints(), fetchStats(), fetchNotices()]);
     }, CONFIG.POLL_INTERVAL);
 }
 
@@ -646,49 +646,67 @@ window.deleteComplaint = async function (id) {
 };
 
 // ────────────────────────────────────────────────────────────
-// 15. NEW COMPLAINT
+// 15. NOTICE BOARD
 // ────────────────────────────────────────────────────────────
-async function submitNewComplaint(e) {
+async function fetchNotices() {
+    try {
+        const notices = await api('/notices/');
+        renderNotices(notices);
+    } catch (err) {
+        console.error('Fetch notices failed:', err);
+    }
+}
+
+function renderNotices(notices) {
+    const list = $('#noticesList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (notices.length === 0) {
+        list.innerHTML = '<p class="text-muted" style="text-align:center;padding:2rem;">No notices available.</p>';
+        return;
+    }
+    
+    // Sort notices by newest first
+    notices.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    notices.forEach(n => {
+        const div = document.createElement('div');
+        div.className = 'notice-card glass-card';
+        div.style.marginBottom = '1rem';
+        div.style.padding = '1.5rem';
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+                <h4 style="margin:0; font-size:1.1rem;">${n.title}</h4>
+                <button class="btn btn-sm btn-danger icon-btn" onclick="deleteNotice(${n.id})" title="Delete Notice"><i class="ph ph-trash"></i></button>
+            </div>
+            <p style="margin-bottom:1rem; color:var(--text-color);">${n.content.replace(/\\n/g, '<br>')}</p>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);">
+                <span><i class="ph ph-user"></i> ${n.author}</span>
+                <span><i class="ph ph-clock"></i> ${formatDate(n.created_at)}</span>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+async function submitNewNotice(e) {
     e.preventDefault();
-    const btn = $('#submitComplaintBtn');
+    const btn = $('#submitNoticeBtn');
     btn.querySelector('.btn-text').classList.add('hidden');
     btn.querySelector('.btn-loader').classList.remove('hidden');
     btn.disabled = true;
 
     try {
-        let mediaUrl = null;
-        const fileInput = $('#ncImage');
-        if (fileInput.files.length > 0) {
-            const uploadPromises = Array.from(fileInput.files).map(async (file) => {
-                const formData = new FormData();
-                formData.append('file', file);
-                const uploadRes = await api('/upload/', { method: 'POST', body: formData });
-                return uploadRes.url;
-            });
-            const uploadedUrls = await Promise.all(uploadPromises);
-            mediaUrl = uploadedUrls.join(',');
-        }
-
         const body = {
-            title: $('#ncTitle').value.trim(),
-            description: $('#ncDescription').value.trim(),
-            category: $('#ncCategory').value,
-            priority: $('#ncPriority').value,
-            latitude: parseFloat($('#ncLat').value),
-            longitude: parseFloat($('#ncLng').value),
-            ward: $('#ncWard').value.trim() || null,
-            complainant_name: $('#ncName').value.trim() || null,
-            complainant_phone: $('#ncPhone').value.trim() || null,
-            incident_date: $('#ncIncidentDate').value || null,
-            complainant_address: $('#ncAddress').value.trim() || null,
-            media_urls: mediaUrl,
+            title: $('#noticeTitle').value.trim(),
+            content: $('#noticeContent').value.trim(),
         };
 
-        await api('/complaints/', { method: 'POST', body });
-        closeModal('newComplaintModal');
-        $('#newComplaintForm').reset();
-        showToast('Complaint registered successfully!', 'success');
-        await Promise.all([fetchComplaints(), fetchStats()]);
+        await api('/notices/', { method: 'POST', body });
+        closeModal('newNoticeModal');
+        $('#newNoticeForm').reset();
+        showToast('Notice posted successfully!', 'success');
+        await fetchNotices();
     } catch (err) {
         showToast(err.message, 'error');
     } finally {
@@ -698,14 +716,17 @@ async function submitNewComplaint(e) {
     }
 }
 
-function geolocate() {
-    if (!navigator.geolocation) { showToast('Geolocation not supported', 'warning'); return; }
-    showToast('Detecting location...', 'info', 2000);
-    navigator.geolocation.getCurrentPosition(
-        (pos) => { $('#ncLat').value = pos.coords.latitude.toFixed(6); $('#ncLng').value = pos.coords.longitude.toFixed(6); showToast('Location detected!', 'success'); },
-        () => showToast('Could not detect location', 'error')
-    );
-}
+window.deleteNotice = async function(id) {
+    const ok = await showConfirm('Delete Notice', `Are you sure you want to delete notice #${id}?`);
+    if (!ok) return;
+    try {
+        await api(\`/notices/\${id}\`, { method: 'DELETE' });
+        showToast('Notice deleted', 'info');
+        await fetchNotices();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+};
 
 // ────────────────────────────────────────────────────────────
 // 16. SETTINGS
@@ -853,10 +874,9 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#filterCategory').addEventListener('change', renderAll);
     $('#filterPriority').addEventListener('change', renderAll);
 
-    // New complaint modal
-    $('#newComplaintBtn').addEventListener('click', () => $('#newComplaintModal').classList.add('show'));
-    $('#newComplaintForm').addEventListener('submit', submitNewComplaint);
-    $('#geolocateBtn').addEventListener('click', geolocate);
+    // Notice board modal
+    $('#newNoticeBtn')?.addEventListener('click', () => $('#newNoticeModal').classList.add('show'));
+    $('#newNoticeForm')?.addEventListener('submit', submitNewNotice);
 
     // Notifications
     $('#notifBellBtn').addEventListener('click', toggleNotifications);

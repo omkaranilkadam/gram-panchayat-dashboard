@@ -146,3 +146,23 @@ class DashboardStats(BaseModel):
     priorities: dict
     recent_activity: List[dict]
     monthly_trend: List[dict]
+
+
+# ──────────────────────────────────────────────
+#  Notice Board
+# ──────────────────────────────────────────────
+class NoticeCreate(BaseModel):
+    title: str = Field(..., min_length=3)
+    content: str = Field(..., min_length=5)
+
+
+class NoticeResponse(BaseModel):
+    id: int
+    title: str
+    content: str
+    author: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
