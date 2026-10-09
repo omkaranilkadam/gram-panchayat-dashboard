@@ -4,11 +4,26 @@ File upload router with validation (type + size).
 import os
 import uuid
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+import firebase_admin
+from firebase_admin import credentials, storage
 
 from .. import dependencies, models
 from ..config import UPLOAD_DIR
 
 router = APIRouter(prefix="/api/v1/upload", tags=["upload"])
+
+# Initialize Firebase Admin if not already initialized
+if not firebase_admin._apps:
+    # Use environment variable for production, or local file for development
+    cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH", "firebase-adminsdk.json")
+    try:
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred, {
+            'storageBucket': 'grampanchayat-3385d.appspot.com'
+        })
+        print("Firebase Admin initialized successfully.")
+    except Exception as e:
+        print(f"Failed to initialize Firebase Admin: {e}")
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 MAX_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -37,12 +52,24 @@ async def upload_image(
             status_code=400, detail="File too large. Maximum size is 20 MB."
         )
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
     extension = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
     filename = f"{uuid.uuid4()}.{extension}"
-    file_path = os.path.join(UPLOAD_DIR, filename)
-
-    with open(file_path, "wb") as buffer:
-        buffer.write(content)
-
-    return {"url": f"/uploads/{filename}"}
+    
+    # Upload to Firebase Storage
+    try:
+        bucket = storage.bucket()
+        blob = bucket.blob(f"uploads/{filename}")
+        
+        # Set content type properly
+        blob.upload_from_string(content, content_type=content_type)
+        
+        # Make the file publicly accessible
+        blob.make_public()
+        
+        # Get the public URL
+        public_url = blob.public_url
+        
+        return {"url": public_url}
+    except Exception as e:
+        print(f"Firebase upload error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload image to Firebase storage.")

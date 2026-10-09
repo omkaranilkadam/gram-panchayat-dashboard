@@ -15,6 +15,7 @@ env/
 # Environment / secrets
 .env
 *.pem
+firebase-adminsdk.json
 
 # Database
 # Uploads (user-generated)
