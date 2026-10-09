@@ -16,8 +16,7 @@ MAX_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 @router.post("/")
 async def upload_image(
-    file: UploadFile = File(...),
-    current_user: models.User = Depends(dependencies.get_current_user),
+    file: UploadFile = File(...)
 ):
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
