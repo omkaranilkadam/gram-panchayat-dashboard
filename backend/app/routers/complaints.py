@@ -38,6 +38,19 @@ def list_complaints(
     return query.order_by(models.Complaint.created_at.desc()).all()
 
 
+@router.get("/citizen/{phone}", response_model=List[schemas.ComplaintListResponse])
+def get_citizen_complaints(
+    phone: str,
+    status: Optional[str] = Query(None),
+    db: Session = Depends(database.get_db),
+):
+    """Get complaints for a specific citizen by their phone number (public)."""
+    query = db.query(models.Complaint).filter(models.Complaint.complainant_phone == phone)
+    if status and status.lower() != "all":
+        query = query.filter(models.Complaint.status == status.lower())
+    return query.order_by(models.Complaint.created_at.desc()).all()
+
+
 @router.get("/{complaint_id}", response_model=schemas.ComplaintResponse)
 def get_complaint(
     complaint_id: int,
