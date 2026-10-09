@@ -574,7 +574,7 @@ window.openDetail = async function (id) {
     }
 
     const mediaHtml = mediaList.length > 0
-        ? mediaList.map(url => `<img src="${imgUrl(url)}" alt="Evidence" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'ph ph-image-broken\\'></i><p>Image unavailable</p></div>'">`).join('')
+        ? mediaList.map(url => `<img src="${imgUrl(url)}" alt="Evidence" onerror="this.outerHTML='<div class=\\'no-image\\' style=\\'flex:0 0 auto;\\'><i class=\\'ph ph-image-broken\\'></i><p>Image unavailable</p></div>'">`).join('')
         : `<div class="no-image"><i class="ph ph-camera-slash"></i><p>No photo attached</p></div>`;
 
     $('#modalBody').innerHTML = `
