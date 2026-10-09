@@ -11,23 +11,30 @@ from ..config import UPLOAD_DIR
 router = APIRouter(prefix="/api/v1/upload", tags=["upload"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-MAX_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
+MAX_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
 
+import mimetypes
 
 @router.post("/")
 async def upload_image(
     file: UploadFile = File(...)
 ):
-    if file.content_type not in ALLOWED_TYPES:
+    content_type = file.content_type
+    if not content_type or content_type == "application/octet-stream":
+        guessed_type, _ = mimetypes.guess_type(file.filename)
+        if guessed_type:
+            content_type = guessed_type
+
+    if content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"File type '{file.content_type}' not allowed. Use JPEG, PNG, GIF, or WebP.",
+            detail=f"File type '{content_type}' (original: {file.content_type}) not allowed. Use JPEG, PNG, GIF, or WebP.",
         )
 
     content = await file.read()
     if len(content) > MAX_SIZE_BYTES:
         raise HTTPException(
-            status_code=400, detail="File too large. Maximum size is 5 MB."
+            status_code=400, detail="File too large. Maximum size is 20 MB."
         )
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
