@@ -49,6 +49,8 @@ class ComplaintBase(BaseModel):
     ward: Optional[str] = None
     complainant_name: Optional[str] = None
     complainant_phone: Optional[str] = None
+    complainant_address: Optional[str] = None
+    incident_date: Optional[str] = None
 
 
 class ComplaintCreate(ComplaintBase):

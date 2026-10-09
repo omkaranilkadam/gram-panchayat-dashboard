@@ -32,6 +32,8 @@ class Complaint(Base):
     ward = Column(String(50), nullable=True)
     complainant_name = Column(String(255), nullable=True)
     complainant_phone = Column(String(20), nullable=True)
+    complainant_address = Column(String(500), nullable=True)
+    incident_date = Column(String(100), nullable=True)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     media_urls = Column(String(1000), nullable=True)
