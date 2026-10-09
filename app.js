@@ -59,7 +59,7 @@ const getStatus = (s) => statusMap[s] || { label: s, icon: 'ph-question', cls: '
 
 const categoryLabels = {
     'Billing & Payments': '💸 Billing & Payments',
-    'Service Disruption': '🚫 Service Disruption',
+    'Service Disruption': '⚠️ Service Disruption',
     'Technical Issue': '⚙️ Technical Issue',
     'Customer Service': '🎧 Customer Service',
     'Property Damage': '🏚️ Property Damage',
