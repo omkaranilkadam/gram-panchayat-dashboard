@@ -471,3 +471,25 @@ input:checked + .slider:before { transform: translateX(24px); }
 .hidden { display: none !important; }
 .text-muted { color: var(--text-muted); }
 .mt-1 { margin-top: .5rem; } .mt-2 { margin-top: 1rem; }
+
+/* ── Notice Board ──────────────────────────────────────────── */
+.notices-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+}
+.notice-card {
+    position: relative;
+    border-left: 4px solid var(--primary);
+    transition: all var(--transition);
+}
+.notice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+@media (min-width: 768px) {
+    .notices-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
