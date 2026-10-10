@@ -726,7 +726,7 @@ window.deleteNotice = async function(id) {
     const ok = await showConfirm('Delete Notice', `Are you sure you want to delete notice #${id}?`);
     if (!ok) return;
     try {
-        await api(\`/notices/\${id}\`, { method: 'DELETE' });
+        await api(`/notices/${id}`, { method: 'DELETE' });
         showToast('Notice deleted', 'info');
         await fetchNotices();
     } catch (err) {
